@@ -147,3 +147,187 @@ Route::get('taobang',function(){
         $table->string('nsx')->default('Nha san xuat');
     });
 });
+//bai30 31 32:queryBuilder
+Route::get('qb/get',function(){
+    $data = DB::table('users')->get();
+    // var_dump($data);
+    foreach($data as $row)
+    {
+        foreach($row as $key=>$value)
+        {
+            echo $key.":".$value."<br>";
+        }
+        echo "<hr>";
+    }
+});
+//select * from users where id = 2
+Route::get('qb/where',function(){
+    $data = DB::table('users')->where('id','=',2)->get();
+    // var_dump($data);
+    foreach($data as $row)
+    {
+        foreach($row as $key=>$value)
+        {
+            echo $key.":".$value."<br>";
+        }
+        echo "<hr>";
+    }    
+});
+//select id,name,email form ...
+Route::get('qb/select',function(){
+    $data = DB::table('users')->select(['id','name','email'])->where('id','=',2)->get();
+    // var_dump($data);
+    foreach($data as $row)
+    {
+        foreach($row as $key=>$value)
+        {
+            echo $key.":".$value."<br>";
+        }
+        echo "<hr>";
+    }    
+});
+//select name as hoten from ..
+Route::get('qb/raw',function(){
+    $data = DB::table('users')->select(DB::raw('id,name as hoten,email'))->where('id','=',2)->get();
+    // var_dump($data);
+    foreach($data as $row)
+    {
+        foreach($row as $key=>$value)
+        {
+            echo $key.":".$value."<br>";
+        }
+        echo "<hr>";
+    }    
+});
+//order by... 
+Route::get('qb/orderby',function(){
+    $data = DB::table('users')->select(DB::raw('id,name as hoten,email'))->where('id','>',1)->orderBy('id','desc')->get();
+    // var_dump($data);
+    foreach($data as $row)
+    {
+        foreach($row as $key=>$value)
+        {
+            echo $key.":".$value."<br>";
+        }
+        echo "<hr>";
+    }    
+});
+//limit 2,5 'tu vi tri so 2 lay 5 phan tu'
+Route::get('qb/orderbylimit',function(){
+    $data = DB::table('users')->select(DB::raw('id,name as hoten,email'))->where('id','>',1)->orderBy('id','desc')->skip(1)->take(3)->get();
+    // var_dump($data);
+    foreach($data as $row)
+    {
+        foreach($row as $key=>$value)
+        {
+            echo $key.":".$value."<br>";
+        }
+        echo "<hr>";
+    }    
+});
+//count
+Route::get('qb/count',function(){
+    $data = DB::table('users')->select(DB::raw('id,name as hoten,email'))->where('id','>',1)->orderBy('id','desc')->take(2)->get();
+    // var_dump($data);
+    echo $data->count(); 
+    // foreach($data as $row)
+    // {
+    //     foreach($row as $key=>$value)
+    //     {
+    //         echo $key.":".$value."<br>";
+    //     }
+    //     echo "<hr>";
+    // }    
+});
+//update
+Route::get('qb/update',function(){
+     DB::table('users')->where('id',1)->update(['name'=>'danh']);
+    echo "update thanh cong";
+});
+//delete
+Route::get('qb/delete',function(){
+     DB::table('users')->where('id','=',1)->delete();   
+    echo "da xoa thanh cong";
+});
+//xoa het data trong bang,chi muc ve 0
+Route::get('qb/deletes',function(){
+    $data = DB::table('users')->truncate();  
+    echo "da xoa thanh cong";
+});
+//bai33 model
+//tao moi doi tuong va save vao database
+Route::get('model/save',function(){
+    $user = new App\User();
+    $user->name = "Mai";
+    $user->email = "Mai@email.com";
+    $user->password = "Mat Khau";
+    $user->save();
+    echo "Da thuc hien save()";
+
+});
+Route::get('model/query',function(){
+    $user = App\User::find(4);
+    echo $user->name;
+});
+//bai 34 truy van voi model
+//insert demo
+Route::get('model/sanpham/save/{ten}',function($ten){
+    $sanpham = new App\SanPham();
+    $sanpham->ten = $ten;
+    $sanpham->soluong = 100;
+    $sanpham->save();
+    echo "da thuc hien save";
+});
+//lay het data trong bang
+Route::get('model/sanpham/all',function(){
+    $sanpham = App\SanPham::all()->toArray();
+    var_dump($sanpham);
+});
+//lay san pham tuong ung voi ten
+Route::get('model/sanpham/ten',function(){
+    $sanpham = App\SanPham::where('ten','imac')->get()->toArray();
+    echo $sanpham[0]['ten'];
+});
+//xoa san pham theo id
+Route::get('model/sanpham/delete',function(){
+    App\SanPham::destroy(5);
+    echo "Da xoa";
+});
+//bai 35 tao lien ket model
+Route::get('taocot',function(){
+    Schema::table('sanpham',function($table){
+        $table->integer('id_loaisanpham')->unsigned();
+    });
+});
+Route::get('lienket',function(){
+    $data = App\SanPham::find(4)->loaisanpham->toArray();
+    var_dump($data);
+});
+Route::get('lienketloaisanpham',function(){
+    $data = App\LoaiSanPham::find(1)->sanpham->toArray();
+    var_dump($data);
+});
+//bai36 Middleware
+Route::get('diem',function(){
+    echo "Ban da du diem";
+})->middleware('MyMiddle')->name('diem');
+Route::get('loi',function(){
+    echo "Ban chua du diem";
+})->name('loi');
+Route::get('nhapdiem',function(){
+    return view('nhapdiem');
+})->name('nhapdiem');
+//bai 36 + 37 Auth
+// Route::group(['middleware' => ['web']], function () {
+//     //routes here
+//     Route::get('dangnhap',function(){
+//            return view('dangnhap');
+//      });
+//     Route::post('login','AuthController@login')->name('login');
+// });
+Route::get('dangnhap',function(){
+    return view('dangnhap');
+});
+Route::post('login','AuthController@login')->name('login');
+
+Route::get('logout','AuthController@logout')->name('logout');
